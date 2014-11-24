@@ -2,7 +2,8 @@
 
 import os
 import sqlite3
-from bottle import route, run
+
+from bottle import abort, redirect, request, route, run
 
 
 class Storage(object):
@@ -32,6 +33,15 @@ class Storage(object):
         self.conn.commit()
         return rowid
 
+    def get(self, rowid):
+        self.cur.execute('select url from urls where id = ?', (rowid,))
+        result = self.cur.fetchone()
+        if result is None:
+            return None
+        self.cur.execute('update urls set gets = gets + 1 where id = ?', (rowid,))
+        self.conn.commit()
+        return result[0]
+
 
 @route('/add/<url:path>')
 def add(url):
@@ -42,6 +52,16 @@ def add(url):
     return '%s://%s%s%s\n' % (request.urlparts[0], request.urlparts[1],
         request.script_name, urlid
     )
+
+
+@route('/<urlid:re:[0-9a-f]+>')
+def get(urlid):
+    s = Storage()
+    rowid = int(urlid, 16)
+    url = s.get(rowid)
+    if url is None:
+        abort(404, "No such URL ID")
+    redirect(tob(url))
 
 
 if __name__ == '__main__':
