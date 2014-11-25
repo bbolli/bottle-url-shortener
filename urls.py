@@ -43,11 +43,14 @@ class Storage(object):
         return result[0]
 
 
+OFFSET = 0xbea0
+
+
 @route('/add/<url:path>')
 def add(url):
     s = Storage()
     rowid = s.add(url)
-    urlid = '%x' % rowid
+    urlid = '%x' % (rowid + OFFSET)
     response.content_type = 'text/plain'
     return '%s://%s%s%s\n' % (request.urlparts[0], request.urlparts[1],
         request.script_name, urlid
@@ -57,7 +60,7 @@ def add(url):
 @route('/<urlid:re:[0-9a-f]+>')
 def get(urlid):
     s = Storage()
-    rowid = int(urlid, 16)
+    rowid = int(urlid, 16) - OFFSET
     url = s.get(rowid)
     if url is None:
         abort(404, "No such URL ID")
