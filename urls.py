@@ -5,6 +5,7 @@ import sqlite3
 
 from bottle import (
     abort,
+    default_app,
     redirect,
     request,
     response,
@@ -73,6 +74,9 @@ def get(urlid):
     if url is None:
         abort(404, "No such URL ID")
     redirect(tob(url))
+
+
+application = default_app()
 
 
 if __name__ == '__main__':
