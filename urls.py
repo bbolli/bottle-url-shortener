@@ -61,7 +61,8 @@ BASE_TEMPLATE = """<!DOCTYPE html>
 <h1>2b’s URL shortener</h1>"""
 
 INDEX_TEMPLATE = BASE_TEMPLATE + """
-<p>Make a GET request to <tt>/add/<tt><i>URL</i> to shorten an URL.
+<p>Use the {{!bm}} bookmarklet to shorten an URL,
+or make a HTTP GET request to <tt>/add/&lt;URL></tt>.
 """
 
 ADD_TEMPLATE = BASE_TEMPLATE + """
@@ -72,10 +73,15 @@ ADD_TEMPLATE = BASE_TEMPLATE + """
 
 @route('/')
 def index():
-    return INDEX_TEMPLATE
+    add_url = '%s://%s%s' % (request.urlparts[0], request.urlparts[1],
+        default_app().get_url('add', url='')
+    )
+    script = 'window.location="' + add_url + '"+encodeURIComponent(window.location);'
+    bm = '''<a href='javascript:%s'>%s</a>''' % (script, "Shorten!")
+    return template(INDEX_TEMPLATE, locals())
 
 
-@route('/add/<url:path>')
+@route('/add/<url:path>', name='add')
 def add(url):
     s = Storage()
     rowid = s.add(url)
