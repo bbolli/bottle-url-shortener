@@ -55,13 +55,24 @@ class Storage(object):
 
 OFFSET = 0xbea0
 
-ADD_TEMPLATE = """<!DOCTYPE html>
+BASE_TEMPLATE = """<!DOCTYPE html>
 <meta charset=utf-8>
 <title>URL shortened</title>
-<h1>2b’s URL shortener</h1>
+<h1>2b’s URL shortener</h1>"""
+
+INDEX_TEMPLATE = BASE_TEMPLATE + """
+<p>Make a GET request to <tt>/add/<tt><i>URL</i> to shorten an URL.
+"""
+
+ADD_TEMPLATE = BASE_TEMPLATE + """
 <p>The URL <i>{{url}}</i> was shortened to
 <a href='{{short_url}}'>{{short_url}}</a>.
 """
+
+
+@route('/')
+def index():
+    return INDEX_TEMPLATE
 
 
 @route('/add/<url:path>')
