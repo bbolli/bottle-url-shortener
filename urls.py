@@ -62,7 +62,7 @@ BASE_TEMPLATE = """<!DOCTYPE html>
 
 INDEX_TEMPLATE = BASE_TEMPLATE + """
 <p>Use the {{!bm}} bookmarklet to shorten an URL,
-or make a HTTP GET request to <tt>/add/&lt;URL></tt>.
+or make a HTTP GET request to <tt>{{!add}}</tt>.
 """
 
 ADD_TEMPLATE = BASE_TEMPLATE + """
@@ -71,13 +71,16 @@ ADD_TEMPLATE = BASE_TEMPLATE + """
 """
 
 
+def make_url(name, **args):
+    return '%s://%s' % request.urlparts[:2] + default_app().get_url(name, **args)
+
+
 @route('/')
 def index():
-    add_url = '%s://%s%s' % (request.urlparts[0], request.urlparts[1],
-        default_app().get_url('add', url='')
-    )
-    script = 'window.location="' + add_url + '"+encodeURIComponent(window.location);'
+    script = 'window.location="' + make_url('add', url='') + \
+        '"+encodeURIComponent(window.location);'
     bm = '''<a href='javascript:%s'>%s</a>''' % (script, "Shorten!")
+    add = make_url('add', url='<i>&lt;URL></i>')
     return template(INDEX_TEMPLATE, locals())
 
 
@@ -86,9 +89,7 @@ def add(url):
     s = Storage()
     rowid = s.add(url)
     urlid = '%x' % (rowid + OFFSET)
-    short_url = '%s://%s%s' % (request.urlparts[0], request.urlparts[1],
-        default_app().get_url('get', urlid=urlid)
-    )
+    short_url = make_url('get', urlid=urlid)
     return template(ADD_TEMPLATE, locals())
 
 
