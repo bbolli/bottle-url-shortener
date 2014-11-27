@@ -61,12 +61,12 @@ def add(url):
     rowid = s.add(url)
     urlid = '%x' % (rowid + OFFSET)
     response.content_type = 'text/plain'
-    return '%s://%s%s%s\n' % (request.urlparts[0], request.urlparts[1],
-        request.script_name, urlid
+    return '%s://%s%s\n' % (request.urlparts[0], request.urlparts[1],
+        default_app().get_url('get', urlid=urlid)
     )
 
 
-@route('/<urlid:re:[0-9a-f]+>')
+@route('/<urlid:re:[0-9a-f]+>', name='get')
 def get(urlid):
     s = Storage()
     rowid = int(urlid, 16) - OFFSET
