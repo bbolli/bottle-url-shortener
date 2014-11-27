@@ -11,6 +11,7 @@ from bottle import (
     response,
     route,
     run,
+    template,
     tob
 )
 
@@ -54,16 +55,24 @@ class Storage(object):
 
 OFFSET = 0xbea0
 
+ADD_TEMPLATE = """<!DOCTYPE html>
+<meta charset=utf-8>
+<title>URL shortened</title>
+<h1>2b’s URL shortener</h1>
+<p>The URL <i>{{url}}</i> was shortened to
+<a href='{{short_url}}'>{{short_url}}</a>.
+"""
+
 
 @route('/add/<url:path>')
 def add(url):
     s = Storage()
     rowid = s.add(url)
     urlid = '%x' % (rowid + OFFSET)
-    response.content_type = 'text/plain'
-    return '%s://%s%s\n' % (request.urlparts[0], request.urlparts[1],
+    short_url = '%s://%s%s' % (request.urlparts[0], request.urlparts[1],
         default_app().get_url('get', urlid=urlid)
     )
+    return template(ADD_TEMPLATE, locals())
 
 
 @route('/<urlid:re:[0-9a-f]+>', name='get')
