@@ -2,6 +2,7 @@
 
 import os
 import sqlite3
+import re
 
 from bottle import (
     abort,
@@ -86,6 +87,8 @@ def index():
 
 @route('/add/<url:path>', name='add')
 def add(url):
+    if not re.match(r'^(f|ht)tps?://', url):
+        abort(400, "Invalid URL format")
     s = Storage()
     rowid = s.add(url)
     urlid = '%x' % (rowid + OFFSET)
