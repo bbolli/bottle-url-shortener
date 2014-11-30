@@ -58,7 +58,7 @@ OFFSET = 0xbea0
 
 BASE_TEMPLATE = """<!DOCTYPE html>
 <meta charset=utf-8>
-<title>URL shortened</title>
+<title>URL shortener</title>
 <h1>2b’s URL shortener</h1>"""
 
 INDEX_TEMPLATE = BASE_TEMPLATE + """
