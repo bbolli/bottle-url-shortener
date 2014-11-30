@@ -93,6 +93,7 @@ SHOW_TEMPLATE = BASE_TEMPLATE + """
 % else:
 <p>No URLs saved yet.
 % end
+<p><a href={{index}}>Home</a>
 """
 
 
@@ -104,7 +105,7 @@ def make_abs_url(name, **args):
     return '%s://%s' % request.urlparts[:2] + make_url(name, **args)
 
 
-@route('/')
+@route('/', name='index')
 def index():
     script = 'window.location="' + make_abs_url('add', url='') + \
         '"+encodeURIComponent(window.location);'
@@ -150,6 +151,7 @@ def show_page():
     s = Storage()
     urls = s.urls()
     rm = lambda rowid: make_url('rm', rowid=rowid)
+    index = make_url('index')
     return template(SHOW_TEMPLATE, locals())
 
 
