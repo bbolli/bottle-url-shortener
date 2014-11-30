@@ -72,7 +72,7 @@ BASE_TEMPLATE = """<!DOCTYPE html>
 <h1>2b’s URL shortener</h1>"""
 
 INDEX_TEMPLATE = BASE_TEMPLATE + """
-<p>Use the {{!bm}} bookmarklet to shorten an URL,
+<p>Use the <a href='javascript:{{!script}}'>Shorten!</a> bookmarklet to shorten an URL,
 or make a HTTP GET request to <tt>{{!add}}</tt>.
 <p><a href='{{show}}'>Show</a> all shortened URLs.
 """
@@ -109,7 +109,6 @@ def make_abs_url(name, **args):
 def index():
     script = 'window.location="' + make_abs_url('add', url='') + \
         '"+encodeURIComponent(window.location);'
-    bm = '''<a href='javascript:%s'>%s</a>''' % (script, "Shorten!")
     add = make_abs_url('add', url='<i>&lt;URL></i>')
     show = make_url('show')
     return template(INDEX_TEMPLATE, locals())
