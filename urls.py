@@ -77,12 +77,16 @@ ADD_TEMPLATE = BASE_TEMPLATE + """
 """
 
 SHOW_TEMPLATE = BASE_TEMPLATE + """
+% if urls:
 <table>
   <tr><th>ID<th>URL<th>dups<th>gets<th>created on</tr>
   % for u in urls:
   <tr><td>{{u[0]}}<td>{{u[1]}}<td>{{u[3]}}<td>{{u[4]}}<td>{{u[2]}}</tr>
   % end
 </table>
+% else:
+<p>No URLs saved yet.
+% end
 """
 
 
@@ -129,8 +133,6 @@ def get(urlid):
 def show_page():
     s = Storage()
     urls = s.urls()
-    if not urls:
-        abort(404, "No URLs found")
     return template(SHOW_TEMPLATE, locals())
 
 
