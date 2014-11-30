@@ -53,6 +53,10 @@ class Storage(object):
         self.conn.commit()
         return result[0]
 
+    def urls(self):
+        self.cur.execute('select * from urls order by id')
+        return self.cur.fetchall()
+
 
 OFFSET = 0xbea0
 
@@ -69,6 +73,15 @@ or make a HTTP GET request to <tt>{{!add}}</tt>.
 ADD_TEMPLATE = BASE_TEMPLATE + """
 <p>The URL <i>{{url}}</i> was shortened to
 <a href='{{short_url}}'>{{short_url}}</a>.
+"""
+
+SHOW_TEMPLATE = BASE_TEMPLATE + """
+<table>
+  <tr><th>ID<th>URL<th>dups<th>gets<th>created on</tr>
+  % for u in urls:
+  <tr><td>{{u[0]}}<td>{{u[1]}}<td>{{u[3]}}<td>{{u[4]}}<td>{{u[2]}}</tr>
+  % end
+</table>
 """
 
 
@@ -104,6 +117,15 @@ def get(urlid):
     if url is None:
         abort(404, "No such URL ID")
     redirect(tob(url))
+
+
+@route('/show')
+def show_page():
+    s = Storage()
+    urls = s.urls()
+    if not urls:
+        abort(404, "No URLs found")
+    return template(SHOW_TEMPLATE, locals())
 
 
 application = default_app()
