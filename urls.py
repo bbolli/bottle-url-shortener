@@ -87,15 +87,19 @@ SHOW_TEMPLATE = BASE_TEMPLATE + """
 
 
 def make_url(name, **args):
-    return '%s://%s' % request.urlparts[:2] + default_app().get_url(name, **args)
+    return default_app().get_url(name, **args)
+
+
+def make_abs_url(name, **args):
+    return '%s://%s' % request.urlparts[:2] + make_url(name, **args)
 
 
 @route('/')
 def index():
-    script = 'window.location="' + make_url('add', url='') + \
+    script = 'window.location="' + make_abs_url('add', url='') + \
         '"+encodeURIComponent(window.location);'
     bm = '''<a href='javascript:%s'>%s</a>''' % (script, "Shorten!")
-    add = make_url('add', url='<i>&lt;URL></i>')
+    add = make_abs_url('add', url='<i>&lt;URL></i>')
     show = make_url('show')
     return template(INDEX_TEMPLATE, locals())
 
@@ -107,7 +111,7 @@ def add(url):
     s = Storage()
     rowid = s.add(url)
     urlid = '%x' % (rowid + OFFSET)
-    short_url = make_url('get', urlid=urlid)
+    short_url = make_abs_url('get', urlid=urlid)
     return template(ADD_TEMPLATE, locals())
 
 
