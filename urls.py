@@ -44,6 +44,12 @@ class Storage(object):
         self.conn.commit()
         return rowid
 
+    def rm(self, rowid):
+        self.cur.execute('delete from urls where id = ?', (rowid,))
+        count = self.cur.rowcount
+        self.conn.commit()
+        return count
+
     def get(self, rowid):
         self.cur.execute('select url from urls where id = ?', (rowid,))
         result = self.cur.fetchone()
@@ -79,9 +85,9 @@ ADD_TEMPLATE = BASE_TEMPLATE + """
 SHOW_TEMPLATE = BASE_TEMPLATE + """
 % if urls:
 <table>
-  <tr><th>ID<th>URL<th>dups<th>gets<th>created on</tr>
+  <tr><th>ID<th>URL<th>dups<th>gets<th>created on<th>rm!</tr>
   % for u in urls:
-  <tr><td>{{u[0]}}<td>{{u[1]}}<td>{{u[3]}}<td>{{u[4]}}<td>{{u[2]}}</tr>
+  <tr><td>{{u[0]}}<td>{{u[1]}}<td>{{u[3]}}<td>{{u[4]}}<td>{{u[2]}}<td><a href='{{rm(u[0])}}'>✗</a></tr>
   % end
 </table>
 % else:
@@ -119,6 +125,16 @@ def add(url):
     return template(ADD_TEMPLATE, locals())
 
 
+@route('/rm/<rowid:int>', name='rm')
+def rm(rowid):
+    s = Storage()
+    result = s.rm(rowid)
+    if not result:
+        abort(404, "No such URL")
+    ref = request.environ.get('HTTP_REFERER')
+    redirect(ref or make_url('show'))
+
+
 @route('/<urlid:re:[0-9a-f]+>', name='get')
 def get(urlid):
     s = Storage()
@@ -133,6 +149,7 @@ def get(urlid):
 def show_page():
     s = Storage()
     urls = s.urls()
+    rm = lambda rowid: make_url('rm', rowid=rowid)
     return template(SHOW_TEMPLATE, locals())
 
 
