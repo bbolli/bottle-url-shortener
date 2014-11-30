@@ -68,6 +68,7 @@ BASE_TEMPLATE = """<!DOCTYPE html>
 INDEX_TEMPLATE = BASE_TEMPLATE + """
 <p>Use the {{!bm}} bookmarklet to shorten an URL,
 or make a HTTP GET request to <tt>{{!add}}</tt>.
+<p><a href='{{show}}'>Show</a> all shortened URLs.
 """
 
 ADD_TEMPLATE = BASE_TEMPLATE + """
@@ -95,6 +96,7 @@ def index():
         '"+encodeURIComponent(window.location);'
     bm = '''<a href='javascript:%s'>%s</a>''' % (script, "Shorten!")
     add = make_url('add', url='<i>&lt;URL></i>')
+    show = make_url('show')
     return template(INDEX_TEMPLATE, locals())
 
 
@@ -119,7 +121,7 @@ def get(urlid):
     redirect(tob(url))
 
 
-@route('/show')
+@route('/show', name='show')
 def show_page():
     s = Storage()
     urls = s.urls()
