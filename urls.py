@@ -64,7 +64,20 @@ class Storage(object):
         return self.cur.fetchall()
 
 
-OFFSET = 0xbea0
+class ConvertID:
+    """Convert between URL IDs and database row IDs"""
+
+    ROUTE_RULE = 're:[0-9a-f]+'
+    OFFSET = 0xbea0
+
+    @staticmethod
+    def to_urlid(rowid):
+        return '%x' % (rowid + ConvertID.OFFSET)
+
+    @staticmethod
+    def to_rowid(urlid):
+        return int(urlid, 16) - ConvertID.OFFSET
+
 
 BASE_TEMPLATE = """<!DOCTYPE html>
 <meta charset=utf-8>
@@ -120,8 +133,7 @@ def add(url):
         abort(400, "Invalid URL format")
     s = Storage()
     rowid = s.add(url)
-    urlid = '%x' % (rowid + OFFSET)
-    short_url = make_abs_url('get', urlid=urlid)
+    short_url = make_abs_url('get', urlid=ConvertID.to_urlid(rowid))
     return template(ADD_TEMPLATE, locals())
 
 
@@ -135,11 +147,10 @@ def rm(rowid):
     redirect(ref or make_url('show'))
 
 
-@route('/<urlid:re:[0-9a-f]+>', name='get')
+@route('/<urlid:%s>' % ConvertID.ROUTE_RULE, name='get')
 def get(urlid):
     s = Storage()
-    rowid = int(urlid, 16) - OFFSET
-    url = s.get(rowid)
+    url = s.get(ConvertID.to_rowid(urlid))
     if url is None:
         abort(404, "No such URL ID")
     redirect(tob(url))
