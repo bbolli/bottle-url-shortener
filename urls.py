@@ -100,7 +100,7 @@ SHOW_TEMPLATE = BASE_TEMPLATE + """
 <table>
   <tr><th>ID<th>URL<th>dups<th>gets<th>created on<th>rm!</tr>
   % for u in urls:
-  <tr><td>{{u[0]}}<td>{{u[1]}}<td>{{u[3]}}<td>{{u[4]}}<td>{{u[2]}}<td><a href='{{rm(u[0])}}'>✗</a></tr>
+  <tr><td>{{u[0]}}<td><a href={{short(u[0])}}>{{u[1]}}</a><td>{{u[3]}}<td>{{u[4]}}<td>{{u[2]}}<td><a href={{rm(u[0])}}>✗</a></tr>
   % end
 </table>
 % else:
@@ -161,6 +161,7 @@ def show_page():
     s = Storage()
     urls = s.urls()
     rm = lambda rowid: make_url('rm', rowid=rowid)
+    short = lambda rowid: make_url('get', urlid=ConvertID.to_urlid(rowid))
     index = make_url('index')
     return template(SHOW_TEMPLATE, locals())
 
