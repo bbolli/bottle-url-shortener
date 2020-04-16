@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+from functools import wraps
 import os
 import sqlite3
 import re
@@ -130,28 +131,38 @@ def link(fn, rowid=None):
     return url_for(fn)
 
 
+def template(template_string):
+    def wrapper(fn):
+        fn.template = template_string
+        @wraps(fn)
+        def render(**kwargs):
+            return render_template_string(fn.template, **fn(**kwargs))
+        return render
+    return wrapper
+
+
 @app.route('/')
+@template(INDEX_TEMPLATE)
 def index():
     add = url_for('add', _external=True, url='')
     script = 'window.location="' + add + \
         '"+encodeURIComponent(window.location);'
-    return render_template_string(INDEX_TEMPLATE, link=link, **locals())
+    return dict(link=link, add=add, script=script)
 
 
 @app.route('/add/<path:url>')
+@template(ADD_TEMPLATE)
 def add(url):
     if not re.match(r'^(f|ht)tps?://', url):
         abort(400, "Invalid URL format")
-    s = Storage()
-    rowid = s.add(url)
-    short_url = url_for('get', _external=True, urlid=ConvertID.to_urlid(rowid))
-    return render_template_string(ADD_TEMPLATE, **locals())
+    rowid = Storage().add(url)
+    return dict(url=url, short_url=url_for('get', _external=True,
+                                           urlid=ConvertID.to_urlid(rowid)))
 
 
 @app.route('/rm/<urlid>')
 def rm(urlid):
-    s = Storage()
-    result = s.rm(ConvertID.to_rowid(urlid))
+    result = Storage().rm(ConvertID.to_rowid(urlid))
     if not result:
         abort(404, "No such URL")
     return redirect(request.referrer or url_for('show'))
@@ -159,14 +170,13 @@ def rm(urlid):
 
 @app.route(f'/<{ConvertID.ROUTE_RULE}urlid>')
 def get(urlid):
-    s = Storage()
-    url = s.get(ConvertID.to_rowid(urlid))
+    url = Storage().get(ConvertID.to_rowid(urlid))
     if url is None:
         abort(404, "No such URL ID")
     return redirect(url)
 
 
 @app.route('/show')
+@template(SHOW_TEMPLATE)
 def show():
-    urls = Storage().urls()
-    return render_template_string(SHOW_TEMPLATE, link=link, urls=urls)
+    return dict(link=link, urls=Storage().urls())
