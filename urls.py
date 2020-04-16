@@ -129,6 +129,9 @@ def link(fn, rowid):
     return url_for(fn, urlid=ConvertID.to_urlid(rowid))
 
 
+app.context_processor(lambda: {'link': link})
+
+
 def template(template_string):
     def wrapper(fn):
         fn.template = template_string
@@ -145,7 +148,7 @@ def index():
     add = url_for('add', _external=True, url='')
     script = 'window.location="' + add + \
         '"+encodeURIComponent(window.location);'
-    return dict(link=link, add=add, script=script)
+    return dict(add=add, script=script)
 
 
 @app.route('/add/<path:url>')
@@ -177,4 +180,4 @@ def get(urlid):
 @app.route('/show')
 @template(SHOW_TEMPLATE)
 def show():
-    return dict(link=link, urls=Storage().urls())
+    return dict(urls=Storage().urls())
