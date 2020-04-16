@@ -4,20 +4,19 @@ import os
 import sqlite3
 import re
 
-from bottle import (
+from flask import (
+    Flask,
     abort,
-    default_app,
     redirect,
+    render_template_string,
     request,
-    response,
-    route,
-    run,
-    template,
-    tob
+    url_for,
 )
 
+app = Flask(__name__)
 
-class Storage(object):
+
+class Storage:
     db_file = os.path.join(os.path.split(os.path.abspath(__file__))[0], 'urls.db')
 
     def __init__(self):
@@ -85,8 +84,8 @@ BASE_TEMPLATE = """<!DOCTYPE html>
 <h1>2b’s URL shortener</h1>"""
 
 INDEX_TEMPLATE = BASE_TEMPLATE + """
-<p>Use the <a href='javascript:{{!script}}'>Shorten!</a> bookmarklet to shorten an URL,
-or make a HTTP GET request to <tt>{{!add}}</tt>.
+<p>Use the <a href='javascript:{{ script | safe }}'>Shorten!</a> bookmarklet to shorten an URL,
+or make a HTTP GET request to <tt>{{add}}<i>&lt;URL></i></tt>.
 <p><a href='{{show}}'>Show</a> all shortened URLs.
 """
 
@@ -96,78 +95,70 @@ ADD_TEMPLATE = BASE_TEMPLATE + """
 """
 
 SHOW_TEMPLATE = BASE_TEMPLATE + """
-% if urls:
+{% if urls: %}
 <table>
   <tr><th>ID<th>URL<th>dups<th>gets<th>created on<th>rm!</tr>
-  % for u in urls:
+  {% for u in urls: %}
   <tr><td>{{u[0]}}<td><a href={{short(u[0])}}>{{u[1]}}</a><td>{{u[3]}}<td>{{u[4]}}<td>{{u[2]}}<td><a href={{rm(u[0])}}>✗</a></tr>
-  % end
+  {% endfor %}
 </table>
-% else:
+{% else: %}
 <p>No URLs saved yet.
-% end
+{% endif %}
 <p><a href={{index}}>Home</a>
 """
 
 
 def make_url(name, **args):
-    return default_app().get_url(name, **args)
+    return url_for(name, **args)
 
 
 def make_abs_url(name, **args):
-    return '%s://%s' % request.urlparts[:2] + make_url(name, **args)
+    return url_for(name, _external=True, **args)
 
 
-@route('/', name='index')
+@app.route('/')
 def index():
-    script = 'window.location="' + make_abs_url('add', url='') + \
+    add = make_abs_url('add', url='')
+    script = 'window.location="' + add + \
         '"+encodeURIComponent(window.location);'
-    add = make_abs_url('add', url='<i>&lt;URL></i>')
     show = make_url('show')
-    return template(INDEX_TEMPLATE, locals())
+    return render_template_string(INDEX_TEMPLATE, **locals())
 
 
-@route('/add/<url:path>', name='add')
+@app.route('/add/<path:url>')
 def add(url):
     if not re.match(r'^(f|ht)tps?://', url):
         abort(400, "Invalid URL format")
     s = Storage()
     rowid = s.add(url)
     short_url = make_abs_url('get', urlid=ConvertID.to_urlid(rowid))
-    return template(ADD_TEMPLATE, locals())
+    return render_template_string(ADD_TEMPLATE, **locals())
 
 
-@route('/rm/<rowid:int>', name='rm')
+@app.route('/rm/<int:rowid>')
 def rm(rowid):
     s = Storage()
     result = s.rm(rowid)
     if not result:
         abort(404, "No such URL")
-    ref = request.environ.get('HTTP_REFERER')
-    redirect(ref or make_url('show'))
+    return redirect(request.referrer or make_url('show'))
 
 
-@route('/<urlid:%s>' % ConvertID.ROUTE_RULE, name='get')
+@app.route('/<urlid>')
 def get(urlid):
     s = Storage()
     url = s.get(ConvertID.to_rowid(urlid))
     if url is None:
         abort(404, "No such URL ID")
-    redirect(tob(url))
+    return redirect(url)
 
 
-@route('/show', name='show')
-def show_page():
+@app.route('/show')
+def show():
     s = Storage()
     urls = s.urls()
     rm = lambda rowid: make_url('rm', rowid=rowid)
     short = lambda rowid: make_url('get', urlid=ConvertID.to_urlid(rowid))
     index = make_url('index')
-    return template(SHOW_TEMPLATE, locals())
-
-
-application = default_app()
-
-
-if __name__ == '__main__':
-    run(host='0.0.0.0', port=8080, debug=True)
+    return render_template_string(SHOW_TEMPLATE, **locals())
