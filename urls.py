@@ -111,7 +111,10 @@ SHOW_TEMPLATE = BASE_TEMPLATE + """
 <table>
   <tr><th>ID<th>URL<th>dups<th>gets<th>created on<th>rm!</tr>
   {% for u in urls: %}
-  <tr><td>{{ link('get', u.id) }}<td><a href={{ link('get', u.id) }}>{{u.url}}</a><td>{{u.dups}}<td>{{u.gets}}<td>{{u.added_on}}<td><a href={{ link('rm', u.id) }}>⌫</a></tr>
+  <tr>
+    <td>{{ link('get', u.id) }}<td><a href={{ link('get', u.id) }}>{{ u.url }}</a>
+    <td>{{ u.dups }}<td>{{ u.gets }}<td>{{ u.added_on }}<td><a href={{ link('rm', u.id) }}>⌫</a>
+  </tr>
   {% endfor %}
 </table>
 {% else: %}
