@@ -100,13 +100,13 @@ SHOW_TEMPLATE = BASE_TEMPLATE + """
 <table>
   <tr><th>ID<th>URL<th>dups<th>gets<th>created on<th>rm!</tr>
   {% for u in urls: %}
-  <tr><td>{{u.id}}<td><a href={{short(u.id)}}>{{u.url}}</a><td>{{u.dups}}<td>{{u.gets}}<td>{{u.added_on}}<td><a href={{rm(u.id)}}>⌫</a></tr>
+  <tr><td>{{ link('get', u.id) }}<td><a href={{ link('get', u.id) }}>{{u.url}}</a><td>{{u.dups}}<td>{{u.gets}}<td>{{u.added_on}}<td><a href={{ link('rm', u.id) }}>⌫</a></tr>
   {% endfor %}
 </table>
 {% else: %}
 <p>No URLs saved yet.
 {% endif %}
-<p><a href={{index}}>Home</a>
+<p><a href={{ link('index') }}>Home</a>
 """
 
 
@@ -155,11 +155,13 @@ def get(urlid):
     return redirect(url)
 
 
+def link(fn, rowid=None):
+    if rowid is not None:
+        return make_url(fn, urlid=ConvertID.to_urlid(rowid))
+    return make_url(fn)
+
+
 @app.route('/show')
 def show():
-    s = Storage()
-    urls = s.urls()
-    rm = lambda rowid: make_url('rm', urlid=ConvertID.to_urlid(rowid))
-    short = lambda rowid: make_url('get', urlid=ConvertID.to_urlid(rowid))
-    index = make_url('index')
-    return render_template_string(SHOW_TEMPLATE, **locals())
+    urls = Storage().urls()
+    return render_template_string(SHOW_TEMPLATE, link=link, urls=urls)
