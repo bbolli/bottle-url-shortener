@@ -100,7 +100,7 @@ SHOW_TEMPLATE = BASE_TEMPLATE + """
 <table>
   <tr><th>ID<th>URL<th>dups<th>gets<th>created on<th>rm!</tr>
   {% for u in urls: %}
-  <tr><td>{{u.id}}<td><a href={{short(u.id)}}>{{u.url}}</a><td>{{u.dups}}<td>{{u.gets}}<td>{{u.added_on}}<td><a href={{rm(u.id)}}>✗</a></tr>
+  <tr><td>{{u.id}}<td><a href={{short(u.id)}}>{{u.url}}</a><td>{{u.dups}}<td>{{u.gets}}<td>{{u.added_on}}<td><a href={{rm(u.id)}}>⌫</a></tr>
   {% endfor %}
 </table>
 {% else: %}
