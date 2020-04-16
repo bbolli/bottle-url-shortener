@@ -12,6 +12,7 @@ from flask import (
     request,
     url_for,
 )
+from werkzeug.routing import BaseConverter
 
 app = Flask(__name__)
 
@@ -64,10 +65,20 @@ class Storage:
         return self.cur.fetchall()
 
 
+class RegexConverter(BaseConverter):
+
+    def __init__(self, url_map, *items):
+        super(RegexConverter, self).__init__(url_map)
+        self.regex = items[0]
+
+
+app.url_map.converters['regex'] = RegexConverter
+
+
 class ConvertID:
     """Convert between URL IDs and database row IDs"""
 
-    ROUTE_RULE = 're:[0-9a-f]+'
+    ROUTE_RULE = 'regex("[0-9a-f]{4,}"):'
     OFFSET = 0xbea0
 
     @staticmethod
@@ -143,7 +154,7 @@ def rm(urlid):
     return redirect(request.referrer or url_for('show'))
 
 
-@app.route('/<urlid>')
+@app.route(f'/<{ConvertID.ROUTE_RULE}urlid>')
 def get(urlid):
     s = Storage()
     url = s.get(ConvertID.to_rowid(urlid))
