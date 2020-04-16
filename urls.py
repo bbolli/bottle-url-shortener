@@ -110,20 +110,12 @@ SHOW_TEMPLATE = BASE_TEMPLATE + """
 """
 
 
-def make_url(name, **args):
-    return url_for(name, **args)
-
-
-def make_abs_url(name, **args):
-    return url_for(name, _external=True, **args)
-
-
 @app.route('/')
 def index():
-    add = make_abs_url('add', url='')
+    add = url_for('add', _external=True, url='')
     script = 'window.location="' + add + \
         '"+encodeURIComponent(window.location);'
-    show = make_url('show')
+    show = url_for('show')
     return render_template_string(INDEX_TEMPLATE, **locals())
 
 
@@ -133,7 +125,7 @@ def add(url):
         abort(400, "Invalid URL format")
     s = Storage()
     rowid = s.add(url)
-    short_url = make_abs_url('get', urlid=ConvertID.to_urlid(rowid))
+    short_url = url_for('get', _external=True, urlid=ConvertID.to_urlid(rowid))
     return render_template_string(ADD_TEMPLATE, **locals())
 
 
@@ -143,7 +135,7 @@ def rm(urlid):
     result = s.rm(ConvertID.to_rowid(urlid))
     if not result:
         abort(404, "No such URL")
-    return redirect(request.referrer or make_url('show'))
+    return redirect(request.referrer or url_for('show'))
 
 
 @app.route('/<urlid>')
@@ -157,8 +149,8 @@ def get(urlid):
 
 def link(fn, rowid=None):
     if rowid is not None:
-        return make_url(fn, urlid=ConvertID.to_urlid(rowid))
-    return make_url(fn)
+        return url_for(fn, urlid=ConvertID.to_urlid(rowid))
+    return url_for(fn)
 
 
 @app.route('/show')
