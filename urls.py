@@ -99,7 +99,7 @@ BASE_TEMPLATE = """<!DOCTYPE html>
 INDEX_TEMPLATE = BASE_TEMPLATE + """
 <p>Use the <a href='javascript:{{ script | safe }}'>Shorten!</a> bookmarklet to shorten an URL,
 or make a HTTP GET request to <tt>{{add}}<i>&lt;URL></i></tt>.
-<p><a href='{{ link('show') }}'>Show</a> all shortened URLs.
+<p><a href='{{ url_for('show') }}'>Show</a> all shortened URLs.
 """
 
 ADD_TEMPLATE = BASE_TEMPLATE + """
@@ -121,14 +121,12 @@ SHOW_TEMPLATE = BASE_TEMPLATE + """
 {% else: %}
 <p>No URLs saved yet.
 {% endif %}
-<p><a href={{ link('index') }}>Home</a>
+<p><a href={{ url_for('index') }}>Home</a>
 """
 
 
-def link(fn, rowid=None):
-    if rowid is not None:
-        return url_for(fn, urlid=ConvertID.to_urlid(rowid))
-    return url_for(fn)
+def link(fn, rowid):
+    return url_for(fn, urlid=ConvertID.to_urlid(rowid))
 
 
 def template(template_string):
