@@ -21,6 +21,7 @@ class Storage:
 
     def __init__(self):
         self.conn = sqlite3.connect(self.db_file, detect_types=sqlite3.PARSE_DECLTYPES)
+        self.conn.row_factory = sqlite3.Row
         self.cur = self.conn.cursor()
         self.cur.execute('''create table if not exists urls (
             id integer primary key not null,
@@ -38,7 +39,7 @@ class Storage:
             rowid = self.cur.lastrowid
         except sqlite3.IntegrityError:
             self.cur.execute('select id from urls where url = ?', (url,))
-            rowid = self.cur.fetchone()[0]
+            rowid = self.cur.fetchone()['id']
             self.cur.execute('update urls set dups = dups + 1 where id = ?', (rowid,))
         self.conn.commit()
         return rowid
@@ -56,7 +57,7 @@ class Storage:
             return None
         self.cur.execute('update urls set gets = gets + 1 where id = ?', (rowid,))
         self.conn.commit()
-        return result[0]
+        return result['url']
 
     def urls(self):
         self.cur.execute('select * from urls order by id')
@@ -99,7 +100,7 @@ SHOW_TEMPLATE = BASE_TEMPLATE + """
 <table>
   <tr><th>ID<th>URL<th>dups<th>gets<th>created on<th>rm!</tr>
   {% for u in urls: %}
-  <tr><td>{{u[0]}}<td><a href={{short(u[0])}}>{{u[1]}}</a><td>{{u[3]}}<td>{{u[4]}}<td>{{u[2]}}<td><a href={{rm(u[0])}}>✗</a></tr>
+  <tr><td>{{u.id}}<td><a href={{short(u.id)}}>{{u.url}}</a><td>{{u.dups}}<td>{{u.gets}}<td>{{u.added_on}}<td><a href={{rm(u.id)}}>✗</a></tr>
   {% endfor %}
 </table>
 {% else: %}
