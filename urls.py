@@ -137,10 +137,10 @@ def add(url):
     return render_template_string(ADD_TEMPLATE, **locals())
 
 
-@app.route('/rm/<int:rowid>')
-def rm(rowid):
+@app.route('/rm/<urlid>')
+def rm(urlid):
     s = Storage()
-    result = s.rm(rowid)
+    result = s.rm(ConvertID.to_rowid(urlid))
     if not result:
         abort(404, "No such URL")
     return redirect(request.referrer or make_url('show'))
@@ -159,7 +159,7 @@ def get(urlid):
 def show():
     s = Storage()
     urls = s.urls()
-    rm = lambda rowid: make_url('rm', rowid=rowid)
+    rm = lambda rowid: make_url('rm', urlid=ConvertID.to_urlid(rowid))
     short = lambda rowid: make_url('get', urlid=ConvertID.to_urlid(rowid))
     index = make_url('index')
     return render_template_string(SHOW_TEMPLATE, **locals())
