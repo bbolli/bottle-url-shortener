@@ -87,7 +87,7 @@ BASE_TEMPLATE = """<!DOCTYPE html>
 INDEX_TEMPLATE = BASE_TEMPLATE + """
 <p>Use the <a href='javascript:{{ script | safe }}'>Shorten!</a> bookmarklet to shorten an URL,
 or make a HTTP GET request to <tt>{{add}}<i>&lt;URL></i></tt>.
-<p><a href='{{show}}'>Show</a> all shortened URLs.
+<p><a href='{{ link('show') }}'>Show</a> all shortened URLs.
 """
 
 ADD_TEMPLATE = BASE_TEMPLATE + """
@@ -110,13 +110,18 @@ SHOW_TEMPLATE = BASE_TEMPLATE + """
 """
 
 
+def link(fn, rowid=None):
+    if rowid is not None:
+        return url_for(fn, urlid=ConvertID.to_urlid(rowid))
+    return url_for(fn)
+
+
 @app.route('/')
 def index():
     add = url_for('add', _external=True, url='')
     script = 'window.location="' + add + \
         '"+encodeURIComponent(window.location);'
-    show = url_for('show')
-    return render_template_string(INDEX_TEMPLATE, **locals())
+    return render_template_string(INDEX_TEMPLATE, link=link, **locals())
 
 
 @app.route('/add/<path:url>')
@@ -145,12 +150,6 @@ def get(urlid):
     if url is None:
         abort(404, "No such URL ID")
     return redirect(url)
-
-
-def link(fn, rowid=None):
-    if rowid is not None:
-        return url_for(fn, urlid=ConvertID.to_urlid(rowid))
-    return url_for(fn)
 
 
 @app.route('/show')
